@@ -1,214 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Discord RPC Mobile Simulator</title>
-
+<title>Online Discord RPC Simulator</title>
+<script src="/socket.io/socket.io.js"></script>
 <style>
 body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
     background: #313338;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    font-family: Arial;
     color: white;
 }
-
-.phone {
-    width: 360px;
-    height: 640px;
-    background: #2b2d31;
-    border-radius: 25px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.6);
-}
-
-.header {
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-    color: #949ba4;
-}
-
-.profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #1e1f22;
-    padding: 10px;
-    border-radius: 12px;
-}
-
-.profile img {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-}
-
-.rpc-card {
-    background: #1e1f22;
-    border-radius: 12px;
-    padding: 15px;
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.rpc-image {
-    width: 70px;
-    height: 70px;
-    border-radius: 12px;
-    background: #5865F2;
-    background-size: cover;
-    background-position: center;
-}
-
-.rpc-content {
-    flex: 1;
-}
-
-.rpc-title {
-    font-weight: bold;
-}
-
-.rpc-state {
-    font-size: 14px;
-    color: #b5bac1;
-}
-
-.rpc-time {
-    font-size: 12px;
-    color: #949ba4;
-}
-
-.editor {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
 input, button {
     padding: 8px;
-    border-radius: 6px;
-    border: none;
-    font-size: 14px;
+    margin: 5px;
 }
-
-input {
+.card {
     background: #1e1f22;
-    color: white;
-}
-
-button {
-    background: #5865F2;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-button.stop {
-    background: #ed4245;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
 }
 </style>
 </head>
 <body>
 
-<div class="phone">
+<h2>🌐 Online RPC Simulator</h2>
 
-    <div class="header">Discord RPC Mobile</div>
+<input id="username" placeholder="Username#0000">
+<input id="title" placeholder="Activity Title">
+<input id="state" placeholder="State">
+<button onclick="updateRPC()">Update</button>
 
-    <div class="profile">
-        <img id="avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-        <div>
-            <div id="username">Not Connected</div>
-            <small id="userid"></small>
-        </div>
-    </div>
-
-    <div class="rpc-card">
-        <div class="rpc-image" id="rpcImage"></div>
-        <div class="rpc-content">
-            <div class="rpc-title" id="rpcTitle">No Activity</div>
-            <div class="rpc-state" id="rpcState">Idle</div>
-            <div class="rpc-time" id="rpcTime">00:00 elapsed</div>
-        </div>
-    </div>
-
-    <div class="editor">
-        <input id="userInput" placeholder="Username#0000">
-        <button onclick="connect()">Simulate Connect</button>
-
-        <input id="titleInput" placeholder="Activity Title">
-        <input id="stateInput" placeholder="State">
-        <input id="imageInput" placeholder="Image URL">
-        <button onclick="startRPC()">Start RPC</button>
-        <button class="stop" onclick="stopRPC()">Stop RPC</button>
-    </div>
-
-</div>
+<h3>Online Users</h3>
+<div id="users"></div>
 
 <script>
-let startTime = null;
-let timerInterval = null;
+const socket = io();
 
-function connect() {
-    const user = document.getElementById("userInput").value;
-    if(!user) return;
+function updateRPC() {
+    const data = {
+        username: document.getElementById('username').value,
+        title: document.getElementById('title').value,
+        state: document.getElementById('state').value
+    };
 
-    const fakeID = Math.floor(Math.random() * 999999999999999999);
-    const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${user}`;
-
-    document.getElementById("username").innerText = user;
-    document.getElementById("userid").innerText = "ID: " + fakeID;
-    document.getElementById("avatar").src = avatarUrl;
-
-    localStorage.setItem("discordUser", user);
+    socket.emit('updateRPC', data);
 }
 
-function startRPC() {
-    const title = document.getElementById("titleInput").value || "Playing Game";
-    const state = document.getElementById("stateInput").value || "In Menu";
-    const image = document.getElementById("imageInput").value;
+socket.on('allUsers', (users) => {
+    const container = document.getElementById('users');
+    container.innerHTML = '';
 
-    document.getElementById("rpcTitle").innerText = title;
-    document.getElementById("rpcState").innerText = state;
+    for (let id in users) {
+        const user = users[id];
 
-    if(image) {
-        document.getElementById("rpcImage").style.backgroundImage = `url('${image}')`;
+        const div = document.createElement('div');
+        div.className = "card";
+        div.innerHTML = `
+            <strong>${user.username}</strong><br>
+            ${user.title}<br>
+            <small>${user.state}</small>
+        `;
+        container.appendChild(div);
     }
-
-    startTime = Date.now();
-    timerInterval = setInterval(updateTimer, 1000);
-}
-
-function stopRPC() {
-    clearInterval(timerInterval);
-    document.getElementById("rpcTitle").innerText = "No Activity";
-    document.getElementById("rpcState").innerText = "Idle";
-    document.getElementById("rpcTime").innerText = "00:00 elapsed";
-}
-
-function updateTimer() {
-    const diff = Math.floor((Date.now() - startTime) / 1000);
-    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
-    const seconds = (diff % 60).toString().padStart(2, '0');
-    document.getElementById("rpcTime").innerText = `${minutes}:${seconds} elapsed`;
-}
-
-window.onload = () => {
-    const savedUser = localStorage.getItem("discordUser");
-    if(savedUser) {
-        document.getElementById("userInput").value = savedUser;
-        connect();
-    }
-}
+});
 </script>
 
 </body>
