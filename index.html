@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Discord RPC Simulator</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #313338;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .phone {
+        width: 360px;
+        height: 640px;
+        background: #2b2d31;
+        border-radius: 25px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header {
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        color: #949ba4;
+    }
+
+    .rpc-card {
+        background: #1e1f22;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    .rpc-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .rpc-content {
+        flex: 1;
+    }
+
+    .rpc-title {
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .rpc-state {
+        font-size: 14px;
+        color: #b5bac1;
+    }
+
+    .rpc-timestamp {
+        font-size: 12px;
+        color: #949ba4;
+        margin-top: 5px;
+    }
+
+    .editor {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: auto;
+    }
+
+    input, button {
+        padding: 8px;
+        border-radius: 6px;
+        border: none;
+        font-size: 14px;
+    }
+
+    input {
+        background: #1e1f22;
+        color: white;
+    }
+
+    button {
+        background: #5865F2;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    button:hover {
+        background: #4752C4;
+    }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+    <div class="header">Discord RPC Mobile</div>
+
+    <div class="rpc-card">
+        <div class="rpc-image" id="rpcImage"
+        style="background-image:url('https://cdn-icons-png.flaticon.com/512/2111/2111370.png')">
+        </div>
+
+        <div class="rpc-content">
+            <div class="rpc-title" id="rpcTitle">Playing Game</div>
+            <div class="rpc-state" id="rpcState">In Menu</div>
+            <div class="rpc-timestamp" id="rpcTime">00:00 elapsed</div>
+        </div>
+    </div>
+
+    <div class="editor">
+        <input type="text" id="titleInput" placeholder="Activity Title">
+        <input type="text" id="stateInput" placeholder="State (ex: In Menu)">
+        <input type="text" id="imageInput" placeholder="Image URL">
+        <button onclick="updateRPC()">Update RPC</button>
+    </div>
+
+</div>
+
+<script>
+let startTime = Date.now();
+
+function updateRPC() {
+    const title = document.getElementById("titleInput").value;
+    const state = document.getElementById("stateInput").value;
+    const image = document.getElementById("imageInput").value;
+
+    if(title) document.getElementById("rpcTitle").innerText = title;
+    if(state) document.getElementById("rpcState").innerText = state;
+    if(image) document.getElementById("rpcImage").style.backgroundImage = `url('${image}')`;
+
+    startTime = Date.now();
+}
+
+function updateTimer() {
+    const now = Date.now();
+    const diff = Math.floor((now - startTime) / 1000);
+
+    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+    const seconds = (diff % 60).toString().padStart(2, '0');
+
+    document.getElementById("rpcTime").innerText = `${minutes}:${seconds} elapsed`;
+}
+
+setInterval(updateTimer, 1000);
+</script>
+
+</body>
+</html>
